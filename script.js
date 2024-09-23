@@ -78,40 +78,56 @@ const LearnerSubmissions = [
 
 function getLearnerData(course, ag, submissions) {
     // here, we would process this data to achieve the desired result.
-    try{
-        if(course.id === ag.course_id){
-            const studentScores = {}
 
-            submissions.forEach(submission => {
-                //store each submission into an object
-                const {learner_id, assignment_id, submisson} = submission
-                let assignment = null; 
-
-                for(let i = 0; i < ag.assignments.length; i++){
-                    if(ag.assignments[i].id === submissions.assignment_id){
-                        assignment = ag.assignments[i]
-                        // console.log(assignment);
-                        break;
-                    }
-                }
-                //if the assignment does not exist or if the points possible is 0 
-                // return nothing
-                if(!assignment || assignment.points_possible === 0){
-                    return; 
-                }
-
-                
-
-
-            })
-
-        } else{
-            throw "Error - The Assignment group does not correspond with the Course."
+        if(course.id !== ag.course_id){
+            throw ("Error - The Assignment group does not correspond with the Course.")
         }
-    } catch(error){
-        console.log(error)
-    }
 
+        const studentScores = {};
+
+        submissions.forEach(sub => {
+            //store each submission into an object
+            const {learner_id, assignment_id, submission} = sub
+            let assignment = null; 
+
+            for(let i = 0; i < ag.assignments.length; i++){
+                if(ag.assignments[i].id === assignment_id){
+                    assignment = ag.assignments[i]
+                    // console.log(assignment);
+                    break;
+                }
+            }
+            //if the assignment does not exist or if the points possible is 0 
+            // return nothing
+            if(!assignment || assignment.points_possible === 0){
+                return; 
+            }
+
+            if(assignment.due_at < submission.submitted_at){
+                console.log("This assignment is late. A 10% penalty will deducted to this assingment")
+                submission.score = submission.score - (assignment.points_possible * .10) // 10 percent
+            }
+
+            if(!studentScores[learner_id]){
+                studentScores[learner_id] = {totalScore: 0, pointsPossible: 0, totalAssignments: {}}
+            }
+
+            //Calculate Score for each assignment
+            if(assignment.due_at >= submission.submitted_at){
+                const totalPossiblePoints = assignment.points_possible
+                let score = submission.score
+
+                studentScores[learner_id].pointsPossible = studentScores[learner_id].pointsPossible + totalPossiblePoints;
+
+                studentScores[learner_id].totalScore = studentScores[learner_id].totalScore + score;
+
+                studentScores[learner_id].totalAssignments[assignment_id] = (score / totalPossiblePoints)
+            }
+        })
+
+
+        return result;
+    }
     // const result = [
     //     {
     //         id: 125,
@@ -127,9 +143,29 @@ function getLearnerData(course, ag, submissions) {
     //     }
     // ];
 
-    return result;
+
+try{
+    const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
+    console.log(result)
+} catch(error){
+    console.log(error)
 }
 
-const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
+// console.log(result);
 
-console.log(result);
+
+
+/**
+ * Returns the day as YYYY-MM-DD
+ * aquired from https://stackoverflow.com/questions/23593052/format-javascript-date-as-yyyy-mm-dd
+ */
+// const date = new Date().toISOString().split('T')[0];
+// console.log(date)
+// try{
+
+// } else{
+//     throw "Error - The Assignment group does not correspond with the Course."
+// }
+// } catch(error){
+// console.log(error)
+// }
