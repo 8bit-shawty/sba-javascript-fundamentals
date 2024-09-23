@@ -82,7 +82,7 @@ function getLearnerData(course, ag, submissions) {
         if(course.id !== ag.course_id){
             throw ("Error - The Assignment group does not correspond with the Course.")
         }
-
+        console.log("=================================")
         const studentScores = {};
 
         submissions.forEach(sub => {
@@ -93,7 +93,7 @@ function getLearnerData(course, ag, submissions) {
             for(let i = 0; i < ag.assignments.length; i++){
                 if(ag.assignments[i].id === assignment_id){
                     assignment = ag.assignments[i]
-                    // console.log(assignment);
+                    console.log("Showing results for the assignment :" + assignment.name);
                     break;
                 }
             }
@@ -124,11 +124,7 @@ function getLearnerData(course, ag, submissions) {
                 studentScores[learner_id].totalAssignments[assignment_id] = (score / totalPossiblePoints)
             }
         })
-
-
-        return result;
-    }
-    // const result = [
+            // const result = [
     //     {
     //         id: 125,
     //         avg: 0.985, // (47 + 150) / (50 + 150)
@@ -141,7 +137,31 @@ function getLearnerData(course, ag, submissions) {
     //         1: 0.78, // 39 / 50
     //         2: 0.833 // late: (140 - 15) / 150
     //     }
-    // ];
+    // ]; RESULT SHOULD LOOK SIMIILAR
+    let result;
+    result = [];
+    //for each learner in the student scores object
+    //we want to iterate thru the object to get all of the scores for each learner
+    //we then want to calculate the average
+    
+    for(const learner_id in studentScores){
+        const studentData = studentScores[learner_id]
+        let weightedAverage = 0;
+        if(studentData.pointsPossible > 0){
+            weightedAverage = studentData.totalScore / studentData.pointsPossible
+        }
+
+        //construct a student object and push it to the result array
+        // Number() converts a string or other value to the Number type
+        //parseFloat() returns a floating point number
+        const studentObject = {id: Number(learner_id), avg: parseFloat(weightedAverage)}
+        for(const assignment_id in studentData.totalAssignments){
+            studentObject[assignment_id] = studentData.totalAssignments[assignment_id]
+        }
+        result.push(studentObject);
+    }
+    return result;
+}
 
 
 try{
@@ -150,10 +170,6 @@ try{
 } catch(error){
     console.log(error)
 }
-
-// console.log(result);
-
-
 
 /**
  * Returns the day as YYYY-MM-DD
